@@ -1,5 +1,6 @@
 import { ethers } from 'ethers'
 import { LedgerSigner } from '@ethersproject/hardware-wallets'
+import { HoprToken, HoprDistributor, MultiSigWallet } from './types'
 
 const TETHER = '0xdac17f958d2ee523a2206206994597c13d831ec7'
 const UNISWAP_ROUTER = '0x7a250d5630b4cf539739df2c5dacb4c659f2488d'
@@ -44,6 +45,8 @@ const WORDS = [
 //   '000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2' // WETH
 // ]
 
+const MINTER_ROLE = '0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6'
+
 const PAYLOAD = '0x' + WORDS.join('')
 
 console.log(PAYLOAD)
@@ -64,7 +67,10 @@ function setup(network: Network): { signer: ethers.Signer } {
   return { signer }
 }
 
-function getContractInstances(network: Network, signer: ethers.Signer) {
+function getContractInstances(
+  network: Network,
+  signer: ethers.Signer
+): { HoprToken: HoprToken; HoprDistributor: HoprDistributor; MultiSig: MultiSigWallet } {
   let HoprTokenAddress: string
   let HoprDistributorAddress: string
   let MultiSigAddress: string
@@ -82,20 +88,28 @@ function getContractInstances(network: Network, signer: ethers.Signer) {
   const HoprDistributorABI = require('./bin/contracts/HoprDistributor.json')
   const HoprTokenABI = require('./bin/contracts/HoprToken.json')
 
-  const MultiSig = new ethers.Contract(MultiSigAddress, MultiSigABI['abi'], signer)
+  const MultiSig = new ethers.Contract(MultiSigAddress, MultiSigABI['abi'], signer) as MultiSigWallet
+  const HoprDistributor = new ethers.Contract(
+    HoprDistributorAddress,
+    HoprDistributorABI['abi'],
+    signer
+  ) as HoprDistributor
+  const HoprToken = new ethers.Contract(HoprTokenAddress, HoprTokenABI['abi'], signer) as HoprToken
 
+  return { MultiSig, HoprDistributor, HoprToken }
 }
 
 async function main() {
   const network: Network = 'xDai'
 
   const { signer } = setup(network)
-  getContractInstances(network, signer)
+  const { MultiSig, HoprToken } = getContractInstances(network, signer)
 
-
+  HoprToken.grantRole(MINTER_ROLE, )
   // await MultiSig.submitTransaction(ADDRESS, BALANCE, PAYLOAD).
 
-  console.log(await signer.getAddress())
+  console
+    .log(await signer.getAddress())
 }
 
 main()

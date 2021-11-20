@@ -1,12 +1,17 @@
 {
   "name": "none",
   "private": true,
+  "scripts": {
+    "types": "typechain --target=ethers-v5 ./abi/*.json --out-dir types"
+  },
   "dependencies": {
     "@ethersproject/hardware-wallets": "^5.5.0",
     "@openzeppelin/contracts-v3-0-1": "npm:@openzeppelin/contracts@3.4.2",
+    "@typechain/ethers-v5": "8.0.3",
     "@types/node": "12",
     "ethers": "5.5.1",
     "ts-node": "10.4.0",
+    "typechain": "6.0.3",
     "typescript": "4.5.2"
   },
   "prettier": {

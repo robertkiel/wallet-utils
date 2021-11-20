@@ -1,5 +1,7 @@
 node_modules/
 
+types/
+
 .yarn/
 !.yarn/releases
 !.yarn/plugins
