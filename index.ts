@@ -1,92 +1,57 @@
 import { ethers } from 'ethers'
 import { LedgerSigner } from '@ethersproject/hardware-wallets'
-import { HoprToken, HoprDistributor, MultiSigWallet } from './types'
-
-const TETHER = '0xdac17f958d2ee523a2206206994597c13d831ec7'
-const UNISWAP_ROUTER = '0x7a250d5630b4cf539739df2c5dacb4c659f2488d'
-const CURVE_USDT_ROUTER = '0x52ea46506b9cc5ef470c5bf89f17dc28bb35d85c'
-const ROBERT = '0x93bC372b4cC142dA75a365C5cB45be996347bfeC'
-
-const ADDRESS = CURVE_USDT_ROUTER
-
-//const Balance = '0x' + Number(1e18).toString(16).padStart(64, '0')
-
-const BALANCE = '0x' + Number(0e18).toString(16).padStart(64, '0')
-
-// const WORDS = [
-//   '095ea7b3', // approve()
-//   '0000000000000000000000007a250d5630b4cf539739df2c5dacb4c659f2488d', // UniSwap Router
-//   '00000000000000000000000000000000000000000000000000000002540be400' // Number(10000e6).toString(16).padStart(64, '0') == 10k USDT
-// ]
-
-// const WORDS = [
-//   '095ea7b3', // approve()
-//   '00000000000000000000000052ea46506b9cc5ef470c5bf89f17dc28bb35d85c', // Curve USDT Router
-//   '000000000000000000000000000000000000000000000000000000174876e800' // Number(100000e6).toString(16).padStart(64, '0') == 100k USDT
-// ]
-
-const WORDS = [
-  'a6417ed6', // exchange_underlying
-  '0000000000000000000000000000000000000000000000000000000000000002', // (token ID 2 = USDT)
-  '0000000000000000000000000000000000000000000000000000000000000001', // (token ID 1 = USDC)
-  '000000000000000000000000000000000000000000000000000000174876e800', // (amount to spend in USDT) Number(100000e6).toString(16).padStart(64, '0') == 100k USDT
-  '000000000000000000000000000000000000000000000000000000170cdc1e00' // (minimal amount to receive in DAI) Number(99000e6).toString(16)
-]
-
-// const WORDS = [
-//   '18cbafe5', // swapExactTokensForETH
-//   '00000000000000000000000000000000000000000000000000000002540be400', // Number(10000e6).toString(16).padStart(64, '0') == 10k USDT
-//   '0000000000000000000000000000000000000000000000004bb2703105674800', // Number((10000 / 1400) * 1e18 * 0.9).toString(16).padStart(64, '0') == 7.14 ETH OutMin
-//   '00000000000000000000000000000000000000000000000000000000000000a0', // arr length
-//   '0000000000000000000000004f50ab4e931289344a57f2fe4bbd10546a6fdc17', // MultiSig address
-//   '0000000000000000000000000000000000000000000000000000000060375e4e', // Number(Math.floor(1614111849618 / 1000 + 24 * 3600 * 0.5)).toString(16).padStart(64, '0') == 12 hours from 1614111849618
-//   '0000000000000000000000000000000000000000000000000000000000000002', // arr length
-//   '000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7', // USDT
-//   '000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2' // WETH
-// ]
+import { HoprToken, HoprDistributor, MultiSigWallet, HoprBoost } from './types'
 
 const MINTER_ROLE = '0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6'
 
-const PAYLOAD = '0x' + WORDS.join('')
 
-console.log(PAYLOAD)
+// console.log(PAYLOAD)
 
 type Network = 'xDai' | 'mainnet'
 
-function setup(network: Network): { signer: ethers.Signer } {
+function setup(network: Network): { signer: ethers.Signer; provider: ethers.providers.Provider } {
   let provider: ethers.providers.Provider
   switch (network) {
     case 'xDai':
-      provider = new ethers.providers.WebSocketProvider('wss://rpc.xdaichain.com/wss')
+      provider = new ethers.providers.WebSocketProvider('wss://xdai.poanetwork.dev/wss')
+      break
     case 'mainnet':
       provider = new ethers.providers.InfuraProvider('homestead', '7df28ab798b848b7b5c0331f4674bb2a')
+      break
   }
 
   const signer = new LedgerSigner(provider, 'hid', `m/44'/60'/1'/0/0`)
 
-  return { signer }
+  return { signer, provider }
 }
 
 function getContractInstances(
   network: Network,
   signer: ethers.Signer
-): { HoprToken: HoprToken; HoprDistributor: HoprDistributor; MultiSig: MultiSigWallet } {
+): { HoprToken: HoprToken; HoprDistributor: HoprDistributor; MultiSig: MultiSigWallet; HoprBoostNft: HoprBoost } {
   let HoprTokenAddress: string
   let HoprDistributorAddress: string
   let MultiSigAddress: string
+  let HoprBoostNftAddress: string
+
   switch (network) {
     case 'mainnet':
       HoprTokenAddress = '0xf5581dfefd8fb0e4aec526be659cfab1f8c781da'
       MultiSigAddress = '0x4F50Ab4e931289344a57f2fe4bBd10546a6fdC17'
       HoprDistributorAddress = '0x'
+      HoprBoostNftAddress = '0x'
+      break
     case 'xDai':
       HoprTokenAddress = '0xD057604A14982FE8D88c5fC25Aac3267eA142a08'
       MultiSigAddress = '0x5e1c4e7004b7411ba27dc354330fab31147dfef1'
       HoprDistributorAddress = '0x987cb736fBfBc4a397Acd06045bf0cD9B9deFe66'
+      HoprBoostNftAddress = '0x43d13D7B83607F14335cF2cB75E87dA369D056c7'
+      break
   }
-  const MultiSigABI = require('./bin/contracts/MultiSigWallet.json')
-  const HoprDistributorABI = require('./bin/contracts/HoprDistributor.json')
-  const HoprTokenABI = require('./bin/contracts/HoprToken.json')
+  const MultiSigABI = require('./abi/MultiSigWallet.json')
+  const HoprDistributorABI = require('./abi/HoprDistributor.json')
+  const HoprTokenABI = require('./abi/HoprToken.json')
+  const HoprBoostABI = require('./abi/HoprBoost.json')
 
   const MultiSig = new ethers.Contract(MultiSigAddress, MultiSigABI['abi'], signer) as MultiSigWallet
   const HoprDistributor = new ethers.Contract(
@@ -95,21 +60,26 @@ function getContractInstances(
     signer
   ) as HoprDistributor
   const HoprToken = new ethers.Contract(HoprTokenAddress, HoprTokenABI['abi'], signer) as HoprToken
+  const HoprBoostNft = new ethers.Contract(HoprBoostNftAddress, HoprBoostABI['abi'], signer) as HoprBoost
 
-  return { MultiSig, HoprDistributor, HoprToken }
+  return { MultiSig, HoprDistributor, HoprToken, HoprBoostNft }
 }
 
 async function main() {
   const network: Network = 'xDai'
 
-  const { signer } = setup(network)
-  const { MultiSig, HoprToken } = getContractInstances(network, signer)
+  const { signer, provider } = setup(network)
+  const { MultiSig, HoprToken, HoprBoostNft } = getContractInstances(network, signer)
 
-  HoprToken.grantRole(MINTER_ROLE, )
-  // await MultiSig.submitTransaction(ADDRESS, BALANCE, PAYLOAD).
+  const gasPrice = await provider.getGasPrice()
+  const tx = await HoprBoostNft.populateTransaction.grantRole(MINTER_ROLE, '0x273D4e93eeEf5a494206c072ffF70f6Ea7D7afC4')
 
-  console
-    .log(await signer.getAddress())
+  await MultiSig.submitTransaction(HoprBoostNft.address, 0, tx.data, {
+    gasLimit: '500000',
+    gasPrice: gasPrice
+  })
+
+  console.log('Done')
 }
 
 main()

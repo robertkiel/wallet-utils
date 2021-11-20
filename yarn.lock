@@ -145,7 +145,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ethersproject/hardware-wallets@npm:^5.5.0":
+"@ethersproject/hardware-wallets@npm:5.5.0":
   version: 5.5.0
   resolution: "@ethersproject/hardware-wallets@npm:5.5.0"
   dependencies:
@@ -1721,7 +1721,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "none@workspace:."
   dependencies:
-    "@ethersproject/hardware-wallets": ^5.5.0
+    "@ethersproject/hardware-wallets": 5.5.0
     "@openzeppelin/contracts-v3-0-1": "npm:@openzeppelin/contracts@3.4.2"
     "@typechain/ethers-v5": 8.0.3
     "@types/node": 12
