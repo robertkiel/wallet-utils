@@ -2,7 +2,7 @@
 
 ### USB Ledger connection
 
-```sh
+```shell
 apt install build-essential git
 apt install libudev-dev
 ```
@@ -11,10 +11,10 @@ apt install libudev-dev
 
 ```sh
 yarn install
-yarn typechain
+yarn types # generate types
 ```
 
-- Change main method, e.g.
+Change main method in `index.ts`, e.g.
 
 ```ts
 async function main() {
