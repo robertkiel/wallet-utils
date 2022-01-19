@@ -1,6 +1,6 @@
 import { ethers, BigNumber } from 'ethers'
 import { LedgerSigner } from '@ethersproject/hardware-wallets'
-import { HoprToken, HoprDistributor, MultiSigWallet, HoprBoost, USDT, USDC, HoprStake } from './types'
+import { HoprToken, HoprDistributor, MultiSigWallet, HoprBoost, USDT, USDC, HoprStake, HoprWrapper } from './types'
 import { accounts, values } from './data'
 
 const MINTER_ROLE = '0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6'
@@ -43,6 +43,7 @@ function getContractInstances(
   USDT?: USDT
   USDC?: USDC
   HoprStake?: HoprStake
+  HoprWrapper?: HoprWrapper
 } {
   let HoprTokenAddress: string
   let HoprDistributorAddress: string
@@ -51,6 +52,7 @@ function getContractInstances(
   let USDTAddress: string
   let USDCAddress: string
   let HoprStakeAddress: string
+  let HoprWrapperAddress: string
 
   switch (network) {
     case 'mainnet':
@@ -67,6 +69,7 @@ function getContractInstances(
       MultiSigAddress = '0x5e1c4e7004b7411ba27dc354330fab31147dfef1'
       HoprDistributorAddress = '0x987cb736fBfBc4a397Acd06045bf0cD9B9deFe66'
       HoprBoostNftAddress = '0x43d13D7B83607F14335cF2cB75E87dA369D056c7'
+      HoprWrapperAddress = '0xD4fdec44DB9D44B8f2b6d529620f9C0C7066A2c1'
       // USDTAddress = '0x'
       break
   }
@@ -75,6 +78,8 @@ function getContractInstances(
   const HoprTokenABI = require('./abi/HoprToken.json')
   const HoprBoostABI = require('./abi/HoprBoost.json')
   const USDTABI = require('./abi/USDT.json')
+  const USDCABI = require('./abi/USDT.json')
+  const HoprWrapperABI = require('./abi/HoprWrapper.json')
   const HoprStakeABI = require('./abi/HoprStake.json')
 
   const MultiSig = new ethers.Contract(MultiSigAddress, MultiSigABI['abi'], signer) as MultiSigWallet
@@ -97,7 +102,7 @@ function getContractInstances(
 
   let USDC: USDC
   if (USDCAddress) {
-    USDC = new ethers.Contract(USDCAddress, USDTABI['abi'], signer) as USDC
+    USDC = new ethers.Contract(USDCAddress, USDCABI['abi'], signer) as USDC
   }
 
   let HoprStake: HoprStake
@@ -105,7 +110,12 @@ function getContractInstances(
     HoprStake = new ethers.Contract(HoprStakeAddress, HoprStakeABI['abi'], signer) as HoprStake
   }
 
-  return { MultiSig, HoprDistributor, HoprToken, HoprBoostNft, USDT, USDC, HoprStake }
+  let HoprWrapper: HoprWrapper
+  if (HoprWrapperAddress) {
+    HoprWrapper =  new ethers.Contract(HoprWrapperAddress, HoprWrapperABI['abi'], signer) as HoprWrapper
+  }
+
+  return { MultiSig, HoprDistributor, HoprToken, HoprBoostNft, USDT, USDC, HoprStake, HoprWrapper }
 }
 
 function printMethodABI(tx: ethers.PopulatedTransaction, describtion: string) {
@@ -153,24 +163,29 @@ async function main() {
 
   const { signer, provider } = setup(network, withSigner)
 
-  const { MultiSig, HoprToken, HoprBoostNft, HoprDistributor, USDT, USDC, HoprStake } = getContractInstances(network, withSigner ? signer : provider)
+  const { MultiSig, HoprToken, HoprBoostNft, HoprDistributor, USDT, USDC, HoprStake, HoprWrapper } = getContractInstances(network, withSigner ? signer : provider)
 
-  const Contract = HoprStake
+  const Contract = HoprWrapper
 
-  // const computed = await HoprToken.populateTransaction.transfer(
-  //   '0xd7682ef1180f5fc496cf6981e4854738a57c593e'
-  // , 5n * 10n**(18n+ 6n))
+  const computed = await Contract.populateTransaction.transfer('0xD7682Ef1180f5Fc496CF6981e4854738a57c593E', 1700353n * 10n**18n + 9949112618n * 10n**8n)
 
-  // console.log(await HoprToken.decimals())
-  // printMethodABI(computed, `transferOwnership('0xd7682ef1180f5fc496cf6981e4854738a57c593e')`)
+  // // console.log(await HoprToken.decimals())
+  printMethodABI(computed, `transfer('0xD7682Ef1180f5Fc496CF6981e4854738a57c593E', 1700353n * 10n**18n + 9949112618n * 10n**8n)`)
+  // // // console.log(computed.data)
 
-  // const mstx = await MultiSig.transactions(78)
+  // const mstx = await MultiSig.populateTransaction.submitTransaction(Contract.address, 0, computed.data, {
+  //   gasPrice: '500000'
+  // })
 
+  const onchainTx = await MultiSig.transactions(80)
+
+  console.log(`on-chain\n`, onchainTx)
+  // console.log(mstx.data)
   // console.log(`MS Tx:\n`, mstx.data)
 
-  // await MultiSig.confirmTransaction(78, {
-  //   gasLimit: '500000'
-  // })
+  await MultiSig.confirmTransaction(80, {
+    gasLimit: '500000'
+  })
   // const gasPrice = await provider.getGasPrice()
 
   // const price = ethers.BigNumber.from(`0xdf8475800`)
@@ -180,8 +195,7 @@ async function main() {
 
   // console.log(BigNumber.from('0x16e0223b7e8b1d000000'))
 
-  // const onchainTx = await MultiSig.transactions(74)
-  // console.log(`on-chain\n`, onchainTx.data)
+
   // console.log(`computed\n`, computed.data)
 
  
